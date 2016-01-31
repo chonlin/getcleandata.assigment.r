@@ -1,0 +1,52 @@
+> setwd('/Users/¸¨/Documents/')
+> filename <- "getdata_dataset.zip"
+> if (!file.exists(filename)){
++   fileURL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip "
++   download.file(fileURL, filename)
++ }  
+> if (!file.exists("UCI HAR Dataset")) { 
++   unzip(filename) 
++ }
+> activityLabels <- read.table("UCI HAR Dataset/activity_labels.txt")
+> activityLabels[,2] <- as.character(activityLabels[,2])
+> features <- read.table("UCI HAR Dataset/features.txt")
+> features[,2] <- as.character(features[,2])
+> 
+> featuresgrab <- grep(".*mean.*|.*std.*", features[,2])
+> featuresgrab.names <- features[featuresgrab,2]
+> featuresgrab.names = gsub('-mean', 'Mean', featuresgrab.names)
+> featuresgrabnames = gsub('-std', 'Std', featuresgrab.names)
+> featuresgrab.names <- gsub('[-()]', '', featuresgrab.names)
+> 
+> trainX <- read.table("UCI HAR Dataset/train/X_train.txt")[featuresgrab]
+> trainY <- read.table("UCI HAR Dataset/train/Y_train.txt")
+> trainS <- read.table("UCI HAR Dataset/train/subject_train.txt")
+> trainX <- cbind(trainS, trainY, trainX)
+> 
+> testX <- read.table("UCI HAR Dataset/test/X_test.txt")[featuresgrab]
+> testY <- read.table("UCI HAR Dataset/test/Y_test.txt")
+> testS <- read.table("UCI HAR Dataset/test/subject_test.txt")
+> testX <- cbind(testS, testY, testX)
+> utils:::menuInstallPkgs()
+--- Please select a CRAN mirror for use in this session ---
+¹Á¸Õ URL 'https://cran.rstudio.com/bin/windows/contrib/3.2/reshape2_1.4.1.zip'
+Content type 'application/zip' length 503802 bytes (491 KB)
+downloaded 491 KB
+
+package ¡¥reshape2¡¦ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\¸¨\AppData\Local\Temp\RtmpgtzT3N\downloaded_packages
+> library(reshape2)
+> fData <- rbind(trainX, testX)
+> colnames(fData) <- c("subject", "activity", featuresgrab.names)
+> 
+> fData$activity <- factor(fData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
+> 
+> fData$subject <- as.factor(fData$subject)
+> 
+> fData.melted <- melt(fData, id = c("subject", "activity"))
+> fData.final <- dcast(fData.melted, subject + activity ~ variable, mean)
+> 
+> write.table(fData.final, "tidydata.txt", row.names = FALSE, quote = FALSE)
+> 
